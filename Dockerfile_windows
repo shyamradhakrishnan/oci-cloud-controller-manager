@@ -1,6 +1,4 @@
-ARG CI_IMAGE_REGISTRY
-
-FROM golang:1.18.5 as builder
+FROM --platform=windows/amd64 golang:1.18.5 as builder
 
 ARG COMPONENT
 
