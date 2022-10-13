@@ -150,6 +150,8 @@ image:
 		-t $(IMAGE)-amd64:$(VERSION) .
 	docker  build $(BUILD_ARGS) \
 		-t $(IMAGE)-arm64:$(VERSION) -f Dockerfile_arm_all .
+	docker  build $(BUILD_ARGS) \
+		-t $(IMAGE)--windows-ltsc2019-amd64:$(VERSION) -f Dockerfile_windows .
 
 .PHONY: push
 push: image
@@ -161,6 +163,11 @@ build-arm-all: build-dirs
 	@for component in $(COMPONENT); do \
     	GOOS=$(GOOS) GOARCH=arm64 CGO_ENABLED=0 go build -o dist/arm/$$component -ldflags "-X main.version=$(VERSION) -X main.build=$(BUILD)" ./cmd/$$component ; \
     done
+
+.PHONY: build
+build-windows-all: build-dirs
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o dist/windows/oci-csi-node-driver.exe -ldflags "-X main.version=$(VERSION) -X main.build=$(BUILD)" ./cmd/oci-csi-node-driver
+
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
