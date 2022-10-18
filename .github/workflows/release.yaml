@@ -29,4 +29,4 @@ jobs:
         run: OSS_REGISTRY="ghcr.io/oracle" VERSION="${{ github.ref_name }}" make image
 
       - name: Push Image
-        run: OSS_REGISTRY="ghcr.io/oracle" VERSION="${{ github.ref_name }}" make docker-push-all
+        run: OSS_REGISTRY="ghcr.io/oracle" VERSION="${{ github.ref_name }}" make docker-push-manifest

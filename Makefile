@@ -196,13 +196,6 @@ build-windows-all: build-dirs
 docker-push: ## Push the docker image
 	docker push $(IMAGE)-$(ARCH):$(VERSION)
 
-docker-push-%:
-	$(MAKE) ARCH=$* docker-push
-
-.PHONY: docker-push-all ## Push all the architecture docker images
-docker-push-all: $(addprefix docker-push-,$(ALL_ARCH))
-	$(MAKE) docker-push-manifest
-
 .PHONY: docker-push-manifest
 docker-push-manifest: ## Push the fat manifest docker image.
 	## Minimum docker version 18.06.0 is required for creating and pushing manifest images.
@@ -212,7 +205,7 @@ docker-push-manifest: ## Push the fat manifest docker image.
 	for arch in $(ALL_ARCH.windows); do \
 		for osversion in $(ALL_OSVERSIONS.windows); do \
 			full_version=`docker manifest inspect $${BASE_IMAGE_LTSC2019} | jq -r '.manifests[0].platform["os.version"]'`; \
-			docker manifest annotate --os windows --arch $${arch} --os-version $${full_version} $(IMAGE_TAG) $(IMAGE_TAG)-windows-$${osversion}-$${arch}; \
+			docker manifest annotate --os windows --arch $${arch} --os-version $${full_version} $(IMAGE):$(VERSION) $(IMAGE):$(VERSION)-windows-$${osversion}-$${arch}; \
 		done; \
 	done
 	docker manifest push --purge $(IMAGE):$(VERSION)
