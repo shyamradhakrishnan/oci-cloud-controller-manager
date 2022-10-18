@@ -203,8 +203,8 @@ docker-push-manifest: ## Push the fat manifest docker image.
 			docker manifest annotate --os windows --arch $${arch} --os-version $${full_version} $(IMAGE_TAG) $(IMAGE_TAG)-windows-$${osversion}-$${arch}; \
 		done; \
 	done
-	docker manifest push --purge $(IMAGE_TAG)
-	docker manifest inspect $(IMAGE_TAG)
+	docker manifest push --purge $(IMAGE):$(VERSION)
+	docker manifest inspect $(IMAGE):$(VERSION)
 
 .PHONY: version
 version:
