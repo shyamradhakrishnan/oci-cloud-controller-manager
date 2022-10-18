@@ -204,7 +204,7 @@ docker-push-manifest: ## Push the fat manifest docker image.
 	set -x; \
 	for arch in $(ALL_ARCH.windows); do \
 		for osversion in $(ALL_OSVERSIONS.windows); do \
-			full_version=`docker manifest inspect $${BASE_IMAGE_LTSC2019} | jq -r '.manifests[0].platform["os.version"]'`; \
+			full_version=`docker manifest inspect ${BASE_IMAGE_LTSC2019} | jq -r '.manifests[0].platform["os.version"]'`; \
 			docker manifest annotate --os windows --arch $${arch} --os-version $${full_version} $(IMAGE):$(VERSION) $(IMAGE):$(VERSION)-windows-$${osversion}-$${arch}; \
 		done; \
 	done
