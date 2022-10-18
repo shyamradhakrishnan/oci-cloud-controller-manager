@@ -166,7 +166,7 @@ image: init-buildx
         --pull \
         --output=type=$(OUTPUT_TYPE) \
         --platform="linux/arm64" \
-        --file Dockerfile_arm_all
+        --file Dockerfile_arm_all \
 		-t $(IMAGE):$(VERSION)-linux-arm64
 	docker buildx build \
         --pull \
