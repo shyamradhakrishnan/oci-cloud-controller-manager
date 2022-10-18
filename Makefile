@@ -157,18 +157,20 @@ run-volume-provisioner-dev:
 .PHONY: image
 BUILD_ARGS = --build-arg CI_IMAGE_REGISTRY="$(CI_IMAGE_REGISTRY)" --build-arg COMPONENT="$(COMPONENT)"
 image: init-buildx
-	docker buildx build --pull \
+	docker buildx build . \
+        --pull \
         --output=type=$(OUTPUT_TYPE) \
         --pull $(BUILD_ARGS) \
         --platform="linux/amd64" \
 		-t $(IMAGE):$(VERSION)-linux-amd64 .
-	docker buildx build --pull \
+	docker buildx build . \
+        --pull \
         --output=type=$(OUTPUT_TYPE) \
-        --pull $(BUILD_ARGS) \
         --platform="linux/arm64" \
         --file Dockerfile_arm_all
 		-t $(IMAGE):$(VERSION)-linux-arm64 -f  .
-	docker buildx build --pull \
+	docker buildx build \
+        --pull \
         --output=type=$(OUTPUT_TYPE) \
         --file=Dockerfile_windows \
         --platform=windows \
