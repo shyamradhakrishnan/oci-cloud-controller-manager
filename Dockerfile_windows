@@ -1,7 +1,8 @@
-FROM --platform=windows/amd64 golang:1.18.5 as builder
+ARG BASE_IMAGE
+FROM --platform=$BUILDPLATFORM golang:1.18.5 as builder
 
 ARG COMPONENT
-
+ARG TARGETPLATFORM
 ENV SRC /go/src/github.com/oracle/oci-cloud-controller-manager
 
 ENV GOPATH /go/
@@ -10,9 +11,11 @@ ADD . $SRC
 
 WORKDIR $SRC
 
-RUN ARCH=arm make clean build-windows-all
+RUN make clean build-windows-all
 
-FROM mcr.microsoft.com/windows/servercore:ltsc2019 AS windows-ltsc2019
+FROM ${BASE_IMAGE}
 
 COPY --from=0 /go/src/github.com/oracle/oci-cloud-controller-manager/dist/windows/* /
+
+USER ContainerAdministrator
 ENTRYPOINT ["/oci-csi-node-driver.exe"]

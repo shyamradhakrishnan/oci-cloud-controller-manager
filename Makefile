@@ -27,6 +27,7 @@ else
 endif
 IMAGE ?= $(OSS_REGISTRY)/cloud-provider-oci
 COMPONENT ?= oci-cloud-controller-manager oci-volume-provisioner oci-flexvolume-driver oci-csi-controller-driver oci-csi-node-driver
+BASE_IMAGE_LTSC2019=mcr.microsoft.com/windows/servercore:ltsc2019
 
 ALL_ARCH = amd64 arm64
 
@@ -145,13 +146,14 @@ run-volume-provisioner-dev:
 
 .PHONY: image
 BUILD_ARGS = --build-arg CI_IMAGE_REGISTRY="$(CI_IMAGE_REGISTRY)" --build-arg COMPONENT="$(COMPONENT)"
-image:
+image: init-buildx
 	docker  build $(BUILD_ARGS) \
 		-t $(IMAGE)-amd64:$(VERSION) .
 	docker  build $(BUILD_ARGS) \
 		-t $(IMAGE)-arm64:$(VERSION) -f Dockerfile_arm_all .
-	docker  build $(BUILD_ARGS) \
-		-t $(IMAGE)--windows-ltsc2019-amd64:$(VERSION) -f Dockerfile_windows .
+	docker buildx build --file=Dockerfile_windows --platform=windows \
+		-t $(IMAGE)-windows-ltsc2019-amd64:$(VERSION) \
+		--build-arg BASE_IMAGE=$(BASE_IMAGE_LTSC2019) .
 
 .PHONY: push
 push: image
@@ -208,4 +210,10 @@ test-local: build-dirs
 .PHONY: run-ccm-e2e-tests-local
 run-ccm-e2e-tests-local:
 	./hack/run_e2e_test.sh
+
+init-buildx:
+	# Ensure we use a builder that can leverage it (the default on linux will not)
+	-$(DOCKER) buildx rm multiarch-multiplatform-builder
+	$(DOCKER) buildx create --use --name=multiarch-multiplatform-builder
+	$(DOCKER) run --rm --privileged multiarch/qemu-user-static --reset --credential yes --persistent yes
 
