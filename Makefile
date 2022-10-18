@@ -160,22 +160,21 @@ image: init-buildx
 	docker buildx build . \
         --pull \
         --output=type=$(OUTPUT_TYPE) \
-        --pull $(BUILD_ARGS) \
         --platform="linux/amd64" \
-		-t $(IMAGE):$(VERSION)-linux-amd64 .
+		-t $(IMAGE):$(VERSION)-linux-amd64
 	docker buildx build . \
         --pull \
         --output=type=$(OUTPUT_TYPE) \
         --platform="linux/arm64" \
         --file Dockerfile_arm_all
-		-t $(IMAGE):$(VERSION)-linux-arm64 -f  .
+		-t $(IMAGE):$(VERSION)-linux-arm64
 	docker buildx build \
         --pull \
         --output=type=$(OUTPUT_TYPE) \
         --file=Dockerfile_windows \
         --platform=windows \
 		-t $(IMAGE):$(VERSION)-windows-ltsc2019-amd64 \
-		--build-arg BASE_IMAGE=$(BASE_IMAGE_LTSC2019) .
+		--build-arg BASE_IMAGE=$(BASE_IMAGE_LTSC2019)
 
 .PHONY: push
 push: image
