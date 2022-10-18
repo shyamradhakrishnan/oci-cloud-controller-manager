@@ -52,7 +52,8 @@ ALL_ARCH.windows = amd64
 ALL_OSVERSIONS.windows := ltsc2019
 ALL_OS_ARCH.windows = $(foreach arch, $(ALL_ARCH.windows), $(foreach osversion, ${ALL_OSVERSIONS.windows}, windows-${osversion}-${arch}))
 ALL_OS_ARCH = $(foreach os, $(ALL_OS), ${ALL_OS_ARCH.${os}})
-
+# Output type of docker buildx build
+OUTPUT_TYPE ?= registry
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
 # Allows overriding where the CCM should look for the cloud provider config
@@ -156,11 +157,21 @@ run-volume-provisioner-dev:
 .PHONY: image
 BUILD_ARGS = --build-arg CI_IMAGE_REGISTRY="$(CI_IMAGE_REGISTRY)" --build-arg COMPONENT="$(COMPONENT)"
 image: init-buildx
-	docker  build $(BUILD_ARGS) \
+	docker buildx build --pull \
+        --output=type=$(OUTPUT_TYPE) \
+        --pull $(BUILD_ARGS) \
+        --platform="linux/amd64" \
 		-t $(IMAGE):$(VERSION)-linux-amd64 .
-	docker  build $(BUILD_ARGS) \
-		-t $(IMAGE):$(VERSION)-linux-arm64 -f Dockerfile_arm_all .
-	docker buildx build --file=Dockerfile_windows --platform=windows \
+	docker buildx build --pull \
+        --output=type=$(OUTPUT_TYPE) \
+        --pull $(BUILD_ARGS) \
+        --platform="linux/arm64" \
+        --file Dockerfile_arm_all
+		-t $(IMAGE):$(VERSION)-linux-arm64 -f  .
+	docker buildx build --pull \
+        --output=type=$(OUTPUT_TYPE) \
+        --file=Dockerfile_windows \
+        --platform=windows \
 		-t $(IMAGE):$(VERSION)-windows-ltsc2019-amd64 \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE_LTSC2019) .
 
