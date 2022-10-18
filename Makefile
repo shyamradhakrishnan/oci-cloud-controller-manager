@@ -44,6 +44,15 @@ RELEASE = v1.24.0
 GOOS ?= linux
 ARCH ?= amd64
 
+# Generate all combination of all OS, ARCH, and OSVERSIONS for iteration
+ALL_OS = linux windows
+ALL_ARCH.linux = amd64 arm64
+ALL_OS_ARCH.linux = $(foreach arch, ${ALL_ARCH.linux}, linux-$(arch))
+ALL_ARCH.windows = amd64
+ALL_OSVERSIONS.windows := ltsc2019
+ALL_OS_ARCH.windows = $(foreach arch, $(ALL_ARCH.windows), $(foreach osversion, ${ALL_OSVERSIONS.windows}, windows-${osversion}-${arch}))
+ALL_OS_ARCH = $(foreach os, $(ALL_OS), ${ALL_OS_ARCH.${os}})
+
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
 # Allows overriding where the CCM should look for the cloud provider config
@@ -147,10 +156,10 @@ run-volume-provisioner-dev:
 .PHONY: image
 BUILD_ARGS = --build-arg CI_IMAGE_REGISTRY="$(CI_IMAGE_REGISTRY)" --build-arg COMPONENT="$(COMPONENT)"
 image: init-buildx
-#	docker  build $(BUILD_ARGS) \
-#		-t $(IMAGE)-amd64:$(VERSION) .
-#	docker  build $(BUILD_ARGS) \
-#		-t $(IMAGE)-arm64:$(VERSION) -f Dockerfile_arm_all .
+	docker  build $(BUILD_ARGS) \
+		-t $(IMAGE)-linux-amd64:$(VERSION) .
+	docker  build $(BUILD_ARGS) \
+		-t $(IMAGE)-linux-arm64:$(VERSION) -f Dockerfile_arm_all .
 	docker buildx build --file=Dockerfile_windows --platform=windows \
 		-t $(IMAGE)-windows-ltsc2019-amd64:$(VERSION) \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE_LTSC2019) .
@@ -185,9 +194,17 @@ docker-push-all: $(addprefix docker-push-,$(ALL_ARCH))
 .PHONY: docker-push-manifest
 docker-push-manifest: ## Push the fat manifest docker image.
 	## Minimum docker version 18.06.0 is required for creating and pushing manifest images.
-	docker manifest create --amend $(IMAGE):$(VERSION) $(shell echo $(ALL_ARCH) | sed -e "s~[^ ]*~$(IMAGE)\-&:$(VERSION)~g")
-	@for arch in $(ALL_ARCH); do docker manifest annotate --arch $${arch} ${IMAGE}:${VERSION} ${IMAGE}-$${arch}:${VERSION}; done
-	docker manifest push --purge ${IMAGE}:${VERSION}
+	docker manifest create --amend $(IMAGE_TAG) $(foreach osarch, $(ALL_OS_ARCH), $(IMAGE_TAG)-${osarch})
+	# add "os.version" field to windows images (based on https://github.com/kubernetes/kubernetes/blob/master/build/pause/Makefile)
+	set -x; \
+	for arch in $(ALL_ARCH.windows); do \
+		for osversion in $(ALL_OSVERSIONS.windows); do \
+			full_version=`docker manifest inspect $${BASE_IMAGE_LTSC2019} | jq -r '.manifests[0].platform["os.version"]'`; \
+			docker manifest annotate --os windows --arch $${arch} --os-version $${full_version} $(IMAGE_TAG) $(IMAGE_TAG)-windows-$${osversion}-$${arch}; \
+		done; \
+	done
+	docker manifest push --purge $(IMAGE_TAG)
+	docker manifest inspect $(IMAGE_TAG)
 
 .PHONY: version
 version:
