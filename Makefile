@@ -168,7 +168,7 @@ image: init-buildx
         --platform="linux/arm64" \
         --file Dockerfile_arm_all \
 		-t $(IMAGE):$(VERSION)-linux-arm64
-	docker buildx build \
+	docker buildx build . \
         --pull \
         --output=type=$(OUTPUT_TYPE) \
         --file=Dockerfile_windows \
