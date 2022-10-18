@@ -157,11 +157,11 @@ run-volume-provisioner-dev:
 BUILD_ARGS = --build-arg CI_IMAGE_REGISTRY="$(CI_IMAGE_REGISTRY)" --build-arg COMPONENT="$(COMPONENT)"
 image: init-buildx
 	docker  build $(BUILD_ARGS) \
-		-t $(IMAGE)-linux-amd64:$(VERSION) .
+		-t $(IMAGE):$(VERSION)-linux-amd64 .
 	docker  build $(BUILD_ARGS) \
-		-t $(IMAGE)-linux-arm64:$(VERSION) -f Dockerfile_arm_all .
+		-t $(IMAGE):$(VERSION)-linux-arm64 -f Dockerfile_arm_all .
 	docker buildx build --file=Dockerfile_windows --platform=windows \
-		-t $(IMAGE)-windows-ltsc2019-amd64:$(VERSION) \
+		-t $(IMAGE):$(VERSION)-windows-ltsc2019-amd64 \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE_LTSC2019) .
 
 .PHONY: push
